@@ -1,23 +1,15 @@
 // middleware.ts
 import { NextResponse } from "next/server";
-// import type { NextRequest } from "next/server";
+import { sites } from "./config/sites";
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get("host");
-  const domain = "deloreannextgen.com";
-  const local = "localhost:3000";
-  const isProduction = false;
 
-  const currentHost =
-    // process.env.NODE_ENV == "production"
-    process.env.NODE_ENV == isProduction
-      ? hostname?.replace(`.${domain}`, "") // PUT YOUR DOMAIN HERE
-      : hostname?.replace(`.${local}`, "");
-  console.log("middleware running", currentHost);
+  const subdomain = hostname.split(".")[0];
 
-  if (currentHost === domain || currentHost === local) {
+  if (!sites[subdomain]) {
     return NextResponse.next();
   }
   if (pathname.startsWith(`/_sites`)) {
@@ -33,7 +25,8 @@ export function middleware(request) {
     // rewrite to the current hostname under the pages/sites folder
     // the main logic component will happen in pages/sites/[site]/index.tsx
     const url = request.nextUrl.clone();
-    url.pathname = `/_sites/${currentHost}${pathname}`;
+    url.pathname = `/_sites/${subdomain}${pathname}`;
+    console.log("@@url.pathname", url.pathname);
 
     return NextResponse.rewrite(url);
   }
